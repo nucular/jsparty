@@ -75,7 +75,7 @@ $(function() {
     }
 
     // Connect to the socket
-    var socket = io(window.location.href.replace(/https?/, "ws"));
+    var socket = io(window.location.href.replace(/^http/, "ws"));
 
     socket.on("connect", function() {
         console.info("Connected as: " + socket.id.substr(0, 5));
