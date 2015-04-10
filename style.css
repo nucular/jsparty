@@ -16,10 +16,32 @@ body {
     padding-left: 10px; padding-right: 10px;
     border-bottom: 1px solid #ccc;
 }
+
+.console.input {
+    background-color: #fff;
+    font-style: italic;
+    border-top: 1px solid #ccc;
+}
+.console.input:before {
+    color: #bbb;
+    content: "> ";
+    font-style: normal;
+    font-weight: bold;
+}
+
+.console.output {
+    background-color: #fff;
+    font-style: italic;
+}
+.console.output:before {
+    color: #bbb;
+    content: "< ";
+    font-style: normal;
+    font-weight: bold;
+}
+
 .console.debug {
     color: #555;
-}
-.console.log {
 }
 .console.info {
     background-color: #d9edf7;
@@ -40,10 +62,14 @@ body {
     width: 100%;
     border: none;
     border-bottom: 1px solid #ccc;
+
+    box-sizing: border-box;
     padding-top: 5px; padding-bottom: 5px;
     padding-left: 10px; padding-right: 10px;
     
     font-size: 15px;
     font-family: "Source Code Pro", monospace;
     color: #333;
+
+    resize: none;
 }

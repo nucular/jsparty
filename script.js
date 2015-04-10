@@ -1,4 +1,4 @@
-(function() {
+$(function() {
     // Overwrite the console functions
     var ocon = {};
     for (var i in console) {
@@ -40,7 +40,7 @@
     };
     console.dir = function() {
         ocon.error.apply(console, arguments);
-        $("#console").prepend('<div class="console dir">' + format(arguments) + "</div>");
+        $("#console").prepend('<div class="console dir">' + JSON.stringify(arguments) + "</div>");
     };
 
     // Add a global error handler for good measure
@@ -51,8 +51,63 @@
       return false;
     }
 
+    // Connect to the socket
+    var socket = io(window.location.href.replace(/https?/, "ws"));
+    socket.on("connect", function() {
+        console.info("Connected.");
+    });
+    socket.on("connect_error", function(e) {
+        console.error("Connection Error: " + e.message);
+    });
+    socket.on("connect_timeout", function() {
+        console.error("Connection timed out.");
+    });
+
+    // Evaluate some code
+    var evaluate = function(code) {
+        try {
+            var ret = eval(code);
+
+            // Success
+            var io = $('<div class="console iopair"></div>');
+            io.append('<div class="console input">' + code + "</div>");
+            io.append('<div class="console output">' + JSON.stringify(ret) + "</div>");
+            $("#console").prepend(io);
+            return true;
+        } catch (e) {
+            // Failure
+            var io = $('<div class="console iopair"></div>');
+            io.append('<div class="console input">' + code + "</div>");
+            io.append('<div class="console output error">' + e.message + "</div>");
+            $("#console").prepend(io);
+            return false;
+        }
+    }
+
+    // Bind keys on the textarea
+    $("#input").on("keypress", function(e) {
+        if (e.keyCode == 13) { // enter
+            e.preventDefault();
+            if (e.shiftKey) {
+                $("#input")
+                    .attr("rows", Number($("#input").attr("rows")) + 1)
+                    .val($("#input").val() + "\n");
+            } else {
+                var code = $("#input").val();
+                if (code.trim() == "")
+                    return;
+                if (evaluate(code)) {
+                    $("#input")
+                        .attr("rows", 1)
+                        .val("");
+                    socket.emit(code);
+                }
+            }
+        }
+    });
+
     // Show the readme
     $.get("README.md", function(res) {
         console.log(res);
     });
-})();
+});
