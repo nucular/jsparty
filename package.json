@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/nucular/jsparty",
   "dependencies": {
+    "express": "^4.12.3",
     "socket.io": "^1.3.5"
   }
 }
