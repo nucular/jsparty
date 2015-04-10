@@ -2,7 +2,7 @@
 // node app.js
 
 var socketio = require("socket.io");
-var http = require("https");
+var http = require("http");
 var express = require("express");
 
 var app = express();
