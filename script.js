@@ -51,8 +51,32 @@ $(function() {
       return false;
     }
 
+    // Evaluate some code
+    var evaluate = function(id, code) {
+        try {
+            var ret = eval(code);
+
+            // Success
+            var io = $('<div class="console iopair"></div>');
+            io.append('<div class="id">' + id.substr(0, 5) + "</div>");
+            io.append('<div class="console input">' + code + "</div>");
+            io.append('<div class="console output">' + JSON.stringify(ret) + "</div>");
+            $("#console").prepend(io);
+            return true;
+        } catch (e) {
+            // Failure
+            var io = $('<div class="console iopair"></div>');
+            io.append('<div class="id">' + id.substr(0, 5) + "</div>");
+            io.append('<div class="console input">' + code + "</div>");
+            io.append('<div class="console output error">' + e.message + "</div>");
+            $("#console").prepend(io);
+            return false;
+        }
+    }
+
     // Connect to the socket
     var socket = io(window.location.href.replace(/https?/, "ws"));
+    _socket = socket;
     socket.on("connect", function() {
         console.info("Connected.");
     });
@@ -63,26 +87,9 @@ $(function() {
         console.error("Connection timed out.");
     });
 
-    // Evaluate some code
-    var evaluate = function(code) {
-        try {
-            var ret = eval(code);
-
-            // Success
-            var io = $('<div class="console iopair"></div>');
-            io.append('<div class="console input">' + code + "</div>");
-            io.append('<div class="console output">' + JSON.stringify(ret) + "</div>");
-            $("#console").prepend(io);
-            return true;
-        } catch (e) {
-            // Failure
-            var io = $('<div class="console iopair"></div>');
-            io.append('<div class="console input">' + code + "</div>");
-            io.append('<div class="console output error">' + e.message + "</div>");
-            $("#console").prepend(io);
-            return false;
-        }
-    }
+    socket.on("code", function(data) {
+        evaluate(data.id, data.code);
+    });
 
     // Bind keys on the textarea
     $("#input").on("keypress", function(e) {
@@ -96,11 +103,14 @@ $(function() {
                 var code = $("#input").val();
                 if (code.trim() == "")
                     return;
-                if (evaluate(code)) {
+                if (evaluate(socket.id, code)) {
                     $("#input")
                         .attr("rows", 1)
                         .val("");
-                    socket.emit(code);
+                    socket.emit("code", {
+                        id: socket.id,
+                        code: code
+                    });
                 }
             }
         }

@@ -14,9 +14,9 @@ var io = socketio(server);
 io.on("connection", function(socket) {
     console.log("[connect] " + socket.id);
 
-    socket.on("event", function(data) {
-        console.log("[event] " + socket.id + ": " + data);
-        socket.broadcast.emit(data);
+    socket.on("code", function(data) {
+        console.log("[code] " + socket.id + ": " + data.code);
+        socket.broadcast.emit("code", data);
     });
     socket.on("disconnect", function() {
         console.log("[disconnect] " + socket.id);

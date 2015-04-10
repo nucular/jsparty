@@ -57,6 +57,13 @@ body {
     float: right;
     color: #555;
 }
+.id {
+    float: right;
+    color: #555;
+    font-size: 80%;
+    margin-right: 5px;
+    margin-top: 3px;
+}
 
 #input {
     width: 100%;
