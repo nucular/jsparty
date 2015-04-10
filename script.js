@@ -76,9 +76,9 @@ $(function() {
 
     // Connect to the socket
     var socket = io(window.location.href.replace(/https?/, "ws"));
-    _socket = socket;
+
     socket.on("connect", function() {
-        console.info("Connected.");
+        console.info("Connected as: " + socket.id.substr(0, 5));
     });
     socket.on("connect_error", function(e) {
         console.error("Connection Error: " + e.message);
@@ -89,6 +89,13 @@ $(function() {
 
     socket.on("code", function(data) {
         evaluate(data.id, data.code);
+    });
+
+    socket.on("oconnect", function(data) {
+        console.warn("Connected: " + data.id.substr(0, 5));
+    });
+    socket.on("odisconnect", function(data) {
+        console.warn("Disconnected: " + data.id.substr(0, 5));
     });
 
     // Bind keys on the textarea

@@ -13,6 +13,9 @@ var io = socketio(server);
 
 io.on("connection", function(socket) {
     console.log("[connect] " + socket.id);
+    socket.broadcast.emit("oconnect", {
+        id: socket.id
+    });
 
     socket.on("code", function(data) {
         console.log("[code] " + socket.id + ": " + data.code);
@@ -20,6 +23,9 @@ io.on("connection", function(socket) {
     });
     socket.on("disconnect", function() {
         console.log("[disconnect] " + socket.id);
+        socket.broadcast.emit("odisconnect", {
+            id: socket.id
+        });
     });
 });
 
