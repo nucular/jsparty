@@ -1,0 +1,47 @@
+html {
+    font-size: 15px;
+    font-family: "Source Code Pro", monospace;
+    color: #333;
+    background-color: #eee;
+}
+
+body {
+    padding: 0;
+    margin: 0;
+}
+
+.console {
+    white-space: pre-wrap;
+    padding-top: 5px; padding-bottom: 5px;
+    padding-left: 10px; padding-right: 10px;
+}
+.console.debug {
+    color: #555;
+}
+.console.log {
+}
+.console.info {
+    background-color: #d9edf7;
+}
+.console.warn {
+    background-color: #fcf8e3;
+}
+.console.error {
+    background-color: #f2dede;
+}
+
+.right {
+    float: right;
+    color: #555;
+}
+
+#input {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid #555;
+    padding: 5px;
+    
+    font-size: 15px;
+    font-family: "Source Code Pro", monospace;
+    color: #333;
+}
