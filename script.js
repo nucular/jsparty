@@ -88,13 +88,13 @@ $(function() {
     }
 
     // Evaluate some code
-    var evaluate = function(id, code) {
+    var evaluate = function(nick, code) {
         try {
             var ret = eval(code);
 
             // Success
             var io = $('<div class="console iopair"></div>');
-            io.append('<div class="right">' + id.substr(0, 5) + "</div>");
+            io.append($('<div class="right"></div>').text(nick));
             io.append($('<pre class="console input"></pre>').append(highlight(code)));
             io.append($('<pre class="console output"></pre>').append(repr(ret)));
             $("#console").prepend(io);
@@ -102,7 +102,7 @@ $(function() {
         } catch (e) {
             // Failure
             var io = $('<div class="console iopair"></div>');
-            io.append('<div class="right">' + id.substr(0, 5) + "</div>");
+            io.append($('<div class="right"></div>').text(nick));
             io.append($('<pre class="console input"></pre>').append(highlight(code)));
             io.append($('<pre class="console output error"></pre>').text(e.message));
             $("#console").prepend(io);
@@ -113,8 +113,9 @@ $(function() {
     // Connect to the socket
     var socket = io(window.location.href.replace(/^http/, "ws"));
 
-    socket.on("connect", function() {
-        console.info("Connected as " + socket.id.substr(0, 5));
+    socket.on("connected", function(data) {
+        socket.nick = data.nick;
+        console.info("Connected as " + socket.nick + ",", data.count, "total connections");
     });
     socket.on("count", function(data) {
         console.debug(data.count + " total connections");
@@ -127,25 +128,53 @@ $(function() {
         console.error("Connection timed out.");
     });
     socket.on("reconnect", function(n) {
-        console.info("Reconnected at the " + n + "th time");
+        console.info("Reconnected at the", n, "time");
     });
     socket.on("reconnecting", function(n) {
-        console.debug("Reconnecting for the " + n + "th time");
+        console.debug("Reconnecting for the", n, "time");
     });
     socket.on("reconnect_failed", function(e) {
         console.error("Gave up on reconnecting");
     });
 
     socket.on("code", function(data) {
-        evaluate(data.id, data.code);
+        evaluate(data.nick, data.code);
+    });
+    socket.on("nick", function(data) {
+        if (data.success) {
+            socket.nick = data.nick;
+            console.info("You are now known as", data.nick);
+        } else {
+            console.error(data.message);
+        }
     });
 
     socket.on("oconnect", function(data) {
-        console.warn(data.id.substr(0, 5) + " connected (" + data.count + " total connections)");
+        console.warn(data.nick, "connected,", data.count, "total connections");
     });
     socket.on("odisconnect", function(data) {
-        console.warn(data.id.substr(0, 5) + " disconnected (" + data.count + " total connections)");
+        console.warn(data.nick, "disconnected,", data.count, "total connections");
     });
+    socket.on("onick", function(data) {
+        console.info(data.oldnick, "is now known as", data.nick);
+    });
+
+    var commands = {};
+    commands.help = function(args) {
+        $.get("README.md", function(res) {
+            console.log(res);
+        });
+    }
+
+    commands.nick = function(args) {
+        socket.emit("nick", {
+            nick: args
+        });
+    }
+
+    commands.reload = function(args) {
+        window.location.reload();
+    }
 
     // Bind keys on the textarea
     $("#input").on("keypress", function(e) {
@@ -156,17 +185,29 @@ $(function() {
                     .attr("rows", Number($("#input").attr("rows")) + 1)
                     .val($("#input").val() + "\n");
             } else {
+                if (!socket.connected) {
+                    console.error("Not connected");
+                    return;
+                }
+
                 var code = $("#input").val();
                 if (code.trim() == "")
                     return;
+                var m = code.match(/\/\/(\w+)(?: (.+))?/);
+                if (m) {
+                    if (commands.hasOwnProperty(m[1]))
+                        commands[m[1]](m[2]);
+                    else
+                        console.error("Command not found");
+                    return;
+                }
 
-                if (evaluate(socket.id, code)) {
+                if (evaluate(socket.nick, code)) {
                     $("#input")
                         .attr("rows", 1)
                         .val("");
                 }
                 socket.emit("code", {
-                    id: socket.id,
                     code: code
                 });
             }

@@ -11,3 +11,9 @@ Feel free to try out whatever you want - and feel free to reload, too.
 This project runs for free on [Heroku](https://heroku.com).
 Feel free to check it out on [GitHub](https://github.com/nucular/jsparty) and
 fork it - it's MIT licensed.
+
+Commands
+--------
+- `//help` Show this README
+- `//nick [name]` Set your nickname
+- `//reload` Reload the page
