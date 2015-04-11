@@ -5,6 +5,13 @@ $(function() {
         ocon[i] = console[i];
     }
 
+    var repr = function(obj) {
+        var r = JSON.stringify(obj);
+        if (!r)
+            r = obj.toString();
+        return r;
+    }
+
     var format = function(args) {
         var s = "";
         for (var i = 0; i < args.length; i++) {
@@ -40,7 +47,7 @@ $(function() {
     };
     console.dir = function() {
         ocon.error.apply(console, arguments);
-        $("#console").prepend('<div class="console dir">' + JSON.stringify(arguments) + "</div>");
+        $("#console").prepend('<div class="console dir">' + repr(arguments) + "</div>");
     };
 
     // Add a global error handler for good measure
@@ -60,7 +67,7 @@ $(function() {
             var io = $('<div class="console iopair"></div>');
             io.append('<div class="id">' + id.substr(0, 5) + "</div>");
             io.append('<div class="console input">' + code + "</div>");
-            io.append('<div class="console output">' + JSON.stringify(ret) + "</div>");
+            io.append('<div class="console output">' + repr(ret) + "</div>");
             $("#console").prepend(io);
             return true;
         } catch (e) {
