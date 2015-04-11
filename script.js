@@ -5,36 +5,19 @@ $(function() {
         ocon[i] = console[i];
     }
 
-    // Awesome thing stolen from http://stackoverflow.com/a/7220510/2405983
-    var highlight = function(json) {
-        if (typeof json != 'string') {
-             json = JSON.stringify(json, null, 2);
-        }
-        json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null|undefined|NaN|Infinity)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
-            var cls = 'number';
-            if (/^"/.test(match)) {
-                if (/:$/.test(match)) {
-                    cls = 'key';
-                } else {
-                    cls = 'string';
-                }
-            } else if (/true|false/.test(match)) {
-                cls = 'boolean';
-            } else if (/null|undefined|NaN|Infinity/.test(match)) {
-                cls = 'constant';
-            }
-            return '<span class="highlight ' + cls + '">' + match + '</span>';
-        });
-    }
-
     // isNaN is weird
     var isReallyNaN = function(a) {
         return isNaN(a) && "number" == typeof a
     };
 
+    var highlight = function(txt) {
+        var el = $("<code></code>").text(txt);
+        hljs.highlightBlock(el[0]);
+        return el;
+    }
+
     // JSON.stringify is weird
-    var repr = function(obj, hl) {
+    var repr = function(obj) {
         var r = undefined;
         try {
             r = JSON.stringify(obj, function(k, v) {
@@ -42,6 +25,8 @@ $(function() {
                     return "\xFFconstant:" + String(v);
                 if (v instanceof RegExp)
                     return "\xFFregexp:" + v.toString();
+                if (typeof v == "function")
+                    return "\xFFfunction:" + v.toString();
                 return v;
             }, 2);
 
@@ -49,55 +34,54 @@ $(function() {
             r = r.replace(/"\xFFregexp:(.+)"/g, function(_, re) {
                 return JSON.parse(re);
             });
+            r = r.replace(/"\xFFfunction:(.+)"/g, "$1");
         } catch (e) {
             r = String(obj);
         }
-        if (hl)
-            r = highlight(r);
-        return r;
+        return highlight(r);
     }
 
-    var format = function(args, hl) {
-        var s = "";
+    var format = function(args) {
+        var s = [];
         for (var i = 0; i < args.length; i++) {
-            if (typeof s != "string")
-                s += repr(args[i], hl);
+            if (typeof args[i] != "string")
+                s.push(repr(args[i]));
             else
-                s += args[i];
+                s.push($("<span></span>").text(args[i]));
             if (i != args.length - 1)
-                s += " ";
+                s.push($("<span> </span>"));
         }
         return s;
     }
 
     console.debug = function() {
         ocon.debug.apply(console, arguments);
-        $("#console").prepend('<div class="console debug">' + format(arguments, true) + "</div>");
+        $("#console").prepend($('<pre class="console debug"></pre>').append(format(arguments)));
     };
     console.log = function() {
         ocon.log.apply(console, arguments);
-        $("#console").prepend('<div class="console log">' + format(arguments, true) + "</div>");
+        $("#console").prepend($('<pre class="console log"></pre>').append(format(arguments)));
     };
     console.info = function() {
         ocon.debug.apply(console, arguments);
-        $("#console").prepend('<div class="console info">' + format(arguments, true) + "</div>");
+        $("#console").prepend($('<pre class="console info"></pre>').append(format(arguments)));
     };
     console.warn = function() {
         ocon.warn.apply(console, arguments);
-        $("#console").prepend('<div class="console warn">' + format(arguments, true) + "</div>");
+        $("#console").prepend($('<pre class="console warn"></pre>').append(format(arguments)));
     };
     console.error = function() {
         ocon.error.apply(console, arguments);
-        $("#console").prepend('<div class="console error">' + format(arguments, true) + "</div>");
+        $("#console").prepend($('<pre class="console error"></pre>').append(format(arguments)));
     };
     console.dir = function() {
-        ocon.error.apply(console, arguments);
-        $("#console").prepend('<div class="console dir">' + repr(arguments, true) + "</div>");
+        ocon.dir.apply(console, arguments);
+        $("#console").prepend($('<pre class="console dir"></pre>').append(repr(arguments[0])));
     };
 
     // Add a global error handler for good measure
     window.onerror = function(message, url, lineNumber) {  
-      var e = $('<div class="console error">' + message + "</div>");
+      var e = $('<pre class="console error">' + message + "</pre>");
       $('<div class="right">' + url + ":" + lineNumber + "</div>").appendTo(e);
       e.prependTo("#console");
       return false;
@@ -110,17 +94,17 @@ $(function() {
 
             // Success
             var io = $('<div class="console iopair"></div>');
-            io.append('<div class="id">' + id.substr(0, 5) + "</div>");
-            io.append('<div class="console input">' + code + "</div>");
-            io.append('<div class="console output">' + repr(ret, true) + "</div>");
+            io.append('<div class="right">' + id.substr(0, 5) + "</div>");
+            io.append($('<pre class="console input"></pre>').append(highlight(code)));
+            io.append($('<pre class="console output"></pre>').append(repr(ret)));
             $("#console").prepend(io);
             return true;
         } catch (e) {
             // Failure
             var io = $('<div class="console iopair"></div>');
-            io.append('<div class="id">' + id.substr(0, 5) + "</div>");
-            io.append('<div class="console input">' + code + "</div>");
-            io.append('<div class="console output error">' + e.message + "</div>");
+            io.append('<div class="right">' + id.substr(0, 5) + "</div>");
+            io.append($('<pre class="console input"></pre>').append(highlight(code)));
+            io.append($('<pre class="console output error"></pre>').text(e.message));
             $("#console").prepend(io);
             return false;
         }
