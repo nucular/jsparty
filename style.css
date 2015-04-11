@@ -80,3 +80,19 @@ body {
 
     resize: none;
 }
+
+.highlight.string {
+    color: #d14;
+}
+.highlight.number {
+    color: #008080;
+}
+.highlight.boolean {
+    color: blue;
+}
+.highlight.constant {
+    color: #0086b3;
+}
+.highlight.key {
+    color: #990073;
+}

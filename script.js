@@ -5,18 +5,63 @@ $(function() {
         ocon[i] = console[i];
     }
 
-    var repr = function(obj) {
-        var r = JSON.stringify(obj);
-        if (!r)
-            r = obj.toString();
+    // Awesome thing stolen from http://stackoverflow.com/a/7220510/2405983
+    var highlight = function(json) {
+        if (typeof json != 'string') {
+             json = JSON.stringify(json, null, 2);
+        }
+        json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null|undefined|NaN|Infinity)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+            var cls = 'number';
+            if (/^"/.test(match)) {
+                if (/:$/.test(match)) {
+                    cls = 'key';
+                } else {
+                    cls = 'string';
+                }
+            } else if (/true|false/.test(match)) {
+                cls = 'boolean';
+            } else if (/null|undefined|NaN|Infinity/.test(match)) {
+                cls = 'constant';
+            }
+            return '<span class="highlight ' + cls + '">' + match + '</span>';
+        });
+    }
+
+    // isNaN is weird
+    var isReallyNaN = function(a) {
+        return isNaN(a) && "number" == typeof a
+    };
+
+    // JSON.stringify is weird
+    var repr = function(obj, hl) {
+        var r = undefined;
+        try {
+            r = JSON.stringify(obj, function(k, v) {
+                if (v === null || v === undefined || isReallyNaN(v) || v === Infinity || v === -Infinity)
+                    return "\xFFconstant:" + String(v);
+                if (v instanceof RegExp)
+                    return "\xFFregexp:" + v.toString();
+                return v;
+            }, 2);
+
+            r = r.replace(/"\xFFconstant:(null|undefined|NaN|Infinity|-Infinity)"/g, "$1");
+            r = r.replace(/"\xFFregexp:(.+)"/g, function(_, re) {
+                return JSON.parse(re);
+            });
+        } catch (e) {
+            r = String(obj);
+        }
+        if (hl)
+            r = highlight(r);
         return r;
     }
 
-    var format = function(args) {
+    var format = function(args, hl) {
         var s = "";
         for (var i = 0; i < args.length; i++) {
             if (typeof s != "string")
-                s += JSON.stringify(args[i]);
+                s += repr(args[i], hl);
             else
                 s += args[i];
             if (i != args.length - 1)
@@ -27,27 +72,27 @@ $(function() {
 
     console.debug = function() {
         ocon.debug.apply(console, arguments);
-        $("#console").prepend('<div class="console debug">' + format(arguments) + "</div>");
+        $("#console").prepend('<div class="console debug">' + format(arguments, true) + "</div>");
     };
     console.log = function() {
         ocon.log.apply(console, arguments);
-        $("#console").prepend('<div class="console log">' + format(arguments) + "</div>");
+        $("#console").prepend('<div class="console log">' + format(arguments, true) + "</div>");
     };
     console.info = function() {
         ocon.debug.apply(console, arguments);
-        $("#console").prepend('<div class="console info">' + format(arguments) + "</div>");
+        $("#console").prepend('<div class="console info">' + format(arguments, true) + "</div>");
     };
     console.warn = function() {
         ocon.warn.apply(console, arguments);
-        $("#console").prepend('<div class="console warn">' + format(arguments) + "</div>");
+        $("#console").prepend('<div class="console warn">' + format(arguments, true) + "</div>");
     };
     console.error = function() {
         ocon.error.apply(console, arguments);
-        $("#console").prepend('<div class="console error">' + format(arguments) + "</div>");
+        $("#console").prepend('<div class="console error">' + format(arguments, true) + "</div>");
     };
     console.dir = function() {
         ocon.error.apply(console, arguments);
-        $("#console").prepend('<div class="console dir">' + repr(arguments) + "</div>");
+        $("#console").prepend('<div class="console dir">' + repr(arguments, true) + "</div>");
     };
 
     // Add a global error handler for good measure
@@ -67,7 +112,7 @@ $(function() {
             var io = $('<div class="console iopair"></div>');
             io.append('<div class="id">' + id.substr(0, 5) + "</div>");
             io.append('<div class="console input">' + code + "</div>");
-            io.append('<div class="console output">' + repr(ret) + "</div>");
+            io.append('<div class="console output">' + repr(ret, true) + "</div>");
             $("#console").prepend(io);
             return true;
         } catch (e) {
