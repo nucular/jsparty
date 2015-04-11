@@ -13,8 +13,12 @@ var io = socketio(server);
 
 io.on("connection", function(socket) {
     console.log("[connect] " + socket.id);
+    socket.emit("count", {
+        count: io.engine.clientsCount
+    });
     socket.broadcast.emit("oconnect", {
-        id: socket.id
+        id: socket.id,
+        count: io.engine.clientsCount
     });
 
     socket.on("code", function(data) {
@@ -24,7 +28,8 @@ io.on("connection", function(socket) {
     socket.on("disconnect", function() {
         console.log("[disconnect] " + socket.id);
         socket.broadcast.emit("odisconnect", {
-            id: socket.id
+            id: socket.id,
+            count: io.engine.clientsCount
         });
     });
 });

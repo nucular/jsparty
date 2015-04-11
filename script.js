@@ -114,13 +114,26 @@ $(function() {
     var socket = io(window.location.href.replace(/^http/, "ws"));
 
     socket.on("connect", function() {
-        console.info("Connected as: " + socket.id.substr(0, 5));
+        console.info("Connected as " + socket.id.substr(0, 5));
     });
+    socket.on("count", function(data) {
+        console.debug(data.count + " total connections");
+    });
+
     socket.on("connect_error", function(e) {
-        console.error("Connection Error: " + e.message);
+        console.error("Connection failed", e);
     });
     socket.on("connect_timeout", function() {
         console.error("Connection timed out.");
+    });
+    socket.on("reconnect", function(n) {
+        console.info("Reconnected at the " + n + "th time");
+    });
+    socket.on("reconnecting", function(n) {
+        console.debug("Reconnecting for the " + n + "th time");
+    });
+    socket.on("reconnect_failed", function(e) {
+        console.error("Gave up on reconnecting");
     });
 
     socket.on("code", function(data) {
@@ -128,10 +141,10 @@ $(function() {
     });
 
     socket.on("oconnect", function(data) {
-        console.warn("Connected: " + data.id.substr(0, 5));
+        console.warn(data.id.substr(0, 5) + " connected (" + data.count + " total connections)");
     });
     socket.on("odisconnect", function(data) {
-        console.warn("Disconnected: " + data.id.substr(0, 5));
+        console.warn(data.id.substr(0, 5) + " disconnected (" + data.count + " total connections)");
     });
 
     // Bind keys on the textarea
