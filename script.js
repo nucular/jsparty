@@ -146,6 +146,7 @@ $(function() {
                 var code = $("#input").val();
                 if (code.trim() == "")
                     return;
+
                 if (evaluate(socket.id, code)) {
                     $("#input")
                         .attr("rows", 1)
