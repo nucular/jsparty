@@ -164,11 +164,11 @@ $(function() {
                     $("#input")
                         .attr("rows", 1)
                         .val("");
-                    socket.emit("code", {
-                        id: socket.id,
-                        code: code
-                    });
                 }
+                socket.emit("code", {
+                    id: socket.id,
+                    code: code
+                });
             }
         }
     });
