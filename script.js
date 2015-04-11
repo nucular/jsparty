@@ -195,10 +195,14 @@ $(function() {
                     return;
                 var m = code.match(/\/\/(\w+)(?: (.+))?/);
                 if (m) {
-                    if (commands.hasOwnProperty(m[1]))
+                    if (commands.hasOwnProperty(m[1])) {
                         commands[m[1]](m[2]);
-                    else
+                        $("#input")
+                            .attr("rows", 1)
+                            .val("");
+                    } else {
                         console.error("Command not found");
+                    }
                     return;
                 }
 
